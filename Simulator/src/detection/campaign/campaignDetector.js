@@ -1,4 +1,5 @@
 const Graph = require("graphology");
+const { calculateFraudDNA } = require("./fraudDNA");
 
 /**
  * Layer 2: Campaign Discovery
@@ -12,14 +13,12 @@ const Graph = require("graphology");
  */
 
 function detectCampaigns(transactions) {
-  // Only MEDIUM and HIGH transactions enter Layer 2
   const suspiciousTransactions = transactions.filter(
     (tx) => tx.riskLevel === "MEDIUM" || tx.riskLevel === "HIGH"
   );
 
   const graph = new Graph();
 
-  // Add account nodes
   suspiciousTransactions.forEach((tx) => {
     if (!graph.hasNode(tx.accountId)) {
       graph.addNode(tx.accountId, {
@@ -28,17 +27,13 @@ function detectCampaigns(transactions) {
     }
   });
 
-  // Connect related accounts
   for (let i = 0; i < suspiciousTransactions.length; i++) {
     for (let j = i + 1; j < suspiciousTransactions.length; j++) {
       const tx1 = suspiciousTransactions[i];
       const tx2 = suspiciousTransactions[j];
 
-      const sharedDevice =
-        tx1.deviceId === tx2.deviceId;
-
-      const sharedRecipient =
-        tx1.recipientId === tx2.recipientId;
+      const sharedDevice = tx1.deviceId === tx2.deviceId;
+      const sharedRecipient = tx1.recipientId === tx2.recipientId;
 
       const timeDifference = Math.abs(
         new Date(tx1.timestamp) -
@@ -48,11 +43,7 @@ function detectCampaigns(transactions) {
       const coordinatedTiming =
         timeDifference <= 5 * 60 * 1000;
 
-      if (
-        sharedDevice ||
-        sharedRecipient ||
-        coordinatedTiming
-      ) {
+      if (sharedDevice || sharedRecipient || coordinatedTiming) {
         if (!graph.hasEdge(tx1.accountId, tx2.accountId)) {
           graph.addEdge(
             tx1.accountId,
@@ -68,24 +59,15 @@ function detectCampaigns(transactions) {
     }
   }
 
-  // No relationships = no campaign
   if (graph.size === 0) {
     return [];
   }
 
-  /*
-   * Find connected groups of accounts.
-   *
-   * This ensures strongly related accounts remain
-   * together for our campaign detection.
-   */
   const visited = new Set();
   const groups = [];
 
   function explore(accountId, group) {
-    if (visited.has(accountId)) {
-      return;
-    }
+    if (visited.has(accountId)) return;
 
     visited.add(accountId);
     group.push(accountId);
@@ -106,10 +88,7 @@ function detectCampaigns(transactions) {
   const campaigns = [];
 
   groups.forEach((accountIds, index) => {
-    // A campaign needs at least 2 accounts
-    if (accountIds.length < 2) {
-      return;
-    }
+    if (accountIds.length < 2) return;
 
     const campaignTransactions =
       suspiciousTransactions.filter((tx) =>
@@ -118,61 +97,26 @@ function detectCampaigns(transactions) {
 
     const sharedDevices = [
       ...new Set(
-        campaignTransactions.map(
-          (tx) => tx.deviceId
-        )
+        campaignTransactions.map((tx) => tx.deviceId)
       )
     ];
 
     const sharedRecipients = [
       ...new Set(
-        campaignTransactions.map(
-          (tx) => tx.recipientId
-        )
+        campaignTransactions.map((tx) => tx.recipientId)
       )
     ];
 
-    const timestamps =
-      campaignTransactions.map(
-        (tx) =>
-          new Date(tx.timestamp).getTime()
-      );
-
-    const minTime = Math.min(...timestamps);
-    const maxTime = Math.max(...timestamps);
-
-    const timingPattern =
-      maxTime - minTime <= 5 * 60 * 1000
-        ? "COORDINATED"
-        : "NORMAL";
-
-    const velocity =
-      campaignTransactions.length >= 3
-        ? "HIGH"
-        : "NORMAL";
+    const fraudDNA = calculateFraudDNA(
+      campaignTransactions
+    );
 
     campaigns.push({
       campaignId: `CMP${String(index + 1).padStart(3, "0")}`,
-
       accountIds,
-
       sharedDevices,
-
       sharedRecipients,
-
-      fraudDNA: {
-        velocity,
-
-        sharedDevice:
-          sharedDevices.length <
-          campaignTransactions.length,
-
-        sharedRecipient:
-          sharedRecipients.length <
-          campaignTransactions.length,
-
-        timingPattern
-      }
+      fraudDNA
     });
   });
 
