@@ -39,10 +39,10 @@ const campaignSchema = new mongoose.Schema(
                 default: 0
             },
 
-            timingSync: {
-                type: Number,
-                default: 0
-            }
+            timingPattern: {
+    type: Number,
+    default: 0
+}
         },
 
         status: {
