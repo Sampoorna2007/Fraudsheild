@@ -1,42 +1,44 @@
-const {
-  detectCampaigns
-} = require("./campaignDetector");
+const { detectCampaigns } = require("./campaignDetector");
 
-const {
-  campaignTransactions
-} = require("../../simulator");
+const { campaignTransactions } = require("../../../index.js");
+const { calculateRisk } = require("../riskEngine.js");
 
-const {
-  calculateRisk
-} = require("../riskEngine");
+async function runTest() {
+  console.log("\n===== LAYER 2 CAMPAIGN DISCOVERY TEST =====\n");
 
-console.log("\n===== LAYER 2 CAMPAIGN DISCOVERY TEST =====\n");
+  const transactions = campaignTransactions();
 
-// Generate campaign transactions
-const transactions = campaignTransactions();
+  const history = [];
+  const riskResults = [];
 
-// First pass them through Layer 1
-const riskResults = transactions.map((transaction) =>
-  calculateRisk(transaction, [])
-);
+  for (const transaction of transactions) {
+    const result = await calculateRisk(transaction, history);
 
-console.log("LAYER 1 RESULTS:\n");
+    riskResults.push(result);
+    history.push(transaction);
+  }
 
-riskResults.forEach((transaction) => {
-  console.log({
-    accountId: transaction.accountId,
-    riskLevel: transaction.riskLevel,
-    riskReasons: transaction.riskReasons
+  console.log("LAYER 1 RESULTS:\n");
+
+  riskResults.forEach((transaction) => {
+    console.log({
+      accountId: transaction.accountId,
+      riskLevel: transaction.riskLevel,
+      riskReasons: transaction.riskReasons,
+      anomaly: transaction.anomaly,
+      anomalyScore: transaction.anomalyScore
+    });
   });
+
+  const campaigns = detectCampaigns(riskResults);
+
+  console.log("\nLAYER 2 CAMPAIGNS:\n");
+  console.log(JSON.stringify(campaigns, null, 2));
+
+  console.log(`\nDetected ${campaigns.length} campaign(s).`);
+}
+
+runTest().catch((error) => {
+  console.error("\nLayer 2 test failed:");
+  console.error(error);
 });
-
-// Send Layer 1 results into Layer 2
-const campaigns = detectCampaigns(riskResults);
-
-console.log("\nLAYER 2 CAMPAIGNS:\n");
-
-console.log(JSON.stringify(campaigns, null, 2));
-
-console.log(
-  `\nDetected ${campaigns.length} campaign(s).`
-);
