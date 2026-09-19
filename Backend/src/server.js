@@ -5,6 +5,7 @@ const http = require("http");
 const transactionRoutes = require("./routes/transactionRoutes");
 const campaignRoutes = require("./routes/campaignRoutes");
 const dashboardRoutes = require("./routes/dashboardRoutes");
+const detectionRoutes = require("./routes/detectionRoutes");
 const { initializeSocket } = require("./socket/socket");
 
 require("dotenv").config();
@@ -16,6 +17,7 @@ app.use(express.json());
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/campaigns", campaignRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/detection", detectionRoutes);
 
 const PORT = process.env.PORT || 5000;
 

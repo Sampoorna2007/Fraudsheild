@@ -49,6 +49,16 @@ const transactionSchema = new mongoose.Schema(
             default: []
         },
 
+        anomaly: {
+    type: Boolean,
+    default: false
+},
+
+anomalyScore: {
+    type: Number,
+    default: null
+},
+
         campaignId: {
             type: String,
             default: null
