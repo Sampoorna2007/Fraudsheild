@@ -3,6 +3,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const transactionRoutes = require("./routes/transactionRoutes");
 const campaignRoutes = require("./routes/campaignRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
 require("dotenv").config();
 
 const app = express();
@@ -11,6 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/campaigns", campaignRoutes);
+app.use("/api/dashboard", dashboardRoutes);
 
 const PORT = process.env.PORT || 5000;
 
