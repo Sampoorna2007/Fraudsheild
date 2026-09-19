@@ -1,0 +1,1 @@
+export default function ReviewQueue() { return <section className="page-panel panel"><div className="page-intro"><p className="eyebrow">HUMAN REVIEW</p><h3>Review queue</h3><p>12 decisions are waiting for an analyst.</p></div><div className="queue-summary"><strong>12</strong><span>pending decisions</span><button className="primary-button">Open next case</button></div></section> }

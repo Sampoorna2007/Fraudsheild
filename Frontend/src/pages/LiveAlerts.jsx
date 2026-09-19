@@ -1,0 +1,2 @@
+import AlertFeed from '../components/AlertFeed'
+export default function LiveAlerts({ alerts, onAlertSelect }) { return <section className="panel page-panel"><div className="panel-heading"><div><h3>Live alert stream</h3><p>Every flagged transaction, sorted by detection time</p></div><span className="live-pill"><i /> Streaming</span></div><div onClick={(event) => { const row = event.target.closest('.table-row'); const alert = alerts.find((item) => item.id === row?.dataset.id); if (alert) onAlertSelect(alert) }}><AlertFeed alerts={alerts} /></div></section> }
