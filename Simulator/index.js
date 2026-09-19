@@ -83,12 +83,6 @@ function campaignTransactions() {
 // ---------------------------------------------------------
 // VELOCITY / SMURFING ATTACK
 // ---------------------------------------------------------
-// One account performs many small transactions rapidly
-// to different recipients.
-//
-// This simulates a suspicious burst without relying on
-// unusually large transaction amounts.
-// ---------------------------------------------------------
 
 function velocityAttackTransactions() {
   const accountId = "ACC888";
@@ -136,36 +130,44 @@ function velocityAttackTransactions() {
 }
 
 // ---------------------------------------------------------
-// GENERATE SIMULATION DATA
+// GENERATE FULL SIMULATION
 // ---------------------------------------------------------
 
-const transactions = [];
+function generateSimulation() {
+  const transactions = [];
 
-// Normal traffic
-for (let i = 0; i < 10; i++) {
-  transactions.push(normalTransaction());
+  // Normal traffic
+  for (let i = 0; i < 10; i++) {
+    transactions.push(normalTransaction());
+  }
+
+  // Single suspicious transaction
+  transactions.push(highRiskTransaction());
+
+  // Coordinated fraud campaign
+  transactions.push(...campaignTransactions());
+
+  // Velocity / smurfing attack
+  transactions.push(...velocityAttackTransactions());
+
+  return transactions;
 }
 
-// Single suspicious transaction
-transactions.push(highRiskTransaction());
-
-// Coordinated fraud campaign
-transactions.push(...campaignTransactions());
-
-// Velocity / smurfing attack
-transactions.push(...velocityAttackTransactions());
-
 // ---------------------------------------------------------
-// DISPLAY SIMULATION
+// RUN SIMULATOR ONLY WHEN FILE IS EXECUTED DIRECTLY
 // ---------------------------------------------------------
 
-console.log("\n=== FRAUD SHIELD TRANSACTION SIMULATOR ===\n");
+if (require.main === module) {
+  const transactions = generateSimulation();
 
-transactions.forEach((transaction) => {
-  console.log(JSON.stringify(transaction, null, 2));
-});
+  console.log("\n=== FRAUD SHIELD TRANSACTION SIMULATOR ===\n");
 
-console.log(`\nGenerated ${transactions.length} transactions.`);
+  transactions.forEach((transaction) => {
+    console.log(JSON.stringify(transaction, null, 2));
+  });
+
+  console.log(`\nGenerated ${transactions.length} transactions.`);
+}
 
 // ---------------------------------------------------------
 // EXPORT SCENARIOS
@@ -175,5 +177,6 @@ module.exports = {
   normalTransaction,
   highRiskTransaction,
   campaignTransactions,
-  velocityAttackTransactions
+  velocityAttackTransactions,
+  generateSimulation
 };
