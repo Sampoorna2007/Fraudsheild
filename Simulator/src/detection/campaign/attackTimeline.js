@@ -33,17 +33,22 @@ function createTimeline(transactions, campaigns = []) {
   });
 
   campaigns.forEach((campaign) => {
-    const firstTransaction = transactions
+    const campaignTransactions = transactions
       .filter((tx) => campaign.accountIds.includes(tx.accountId))
       .sort(
         (a, b) =>
           new Date(a.timestamp) - new Date(b.timestamp)
-      )[0];
+      );
+
+    const lastTransaction =
+      campaignTransactions[campaignTransactions.length - 1];
+
+    const detectionTimestamp = lastTransaction
+      ? lastTransaction.timestamp
+      : new Date().toISOString();
 
     events.push({
-      timestamp: firstTransaction
-        ? firstTransaction.timestamp
-        : new Date().toISOString(),
+      timestamp: detectionTimestamp,
       type: "CAMPAIGN_DETECTED",
       campaignId: campaign.campaignId,
       accountIds: campaign.accountIds,
@@ -51,9 +56,7 @@ function createTimeline(transactions, campaigns = []) {
     });
 
     events.push({
-      timestamp: firstTransaction
-        ? firstTransaction.timestamp
-        : new Date().toISOString(),
+      timestamp: detectionTimestamp,
       type: "FRAUD_DNA",
       campaignId: campaign.campaignId,
       fraudDNA: campaign.fraudDNA,

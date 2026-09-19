@@ -25,23 +25,23 @@ const campaignSchema = new mongoose.Schema(
 
         fraudDNA: {
             velocity: {
-                type: String,
-                default: "LOW"
+                type: Number,
+                default: 0
             },
 
             sharedDevice: {
-                type: Boolean,
-                default: false
+                type: Number,
+                default: 0
             },
 
             sharedRecipient: {
-                type: Boolean,
-                default: false
+                type: Number,
+                default: 0
             },
 
-            timingPattern: {
-                type: String,
-                default: "NONE"
+            timingSync: {
+                type: Number,
+                default: 0
             }
         },
 

@@ -2,24 +2,53 @@ const express = require("express");
 const Transaction = require("../models/Transaction");
 const { emitEvent } = require("../socket/socket");
 
+const {
+    processTransaction
+} = require("../detection/detectionService");
+
 const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
-        const transaction = await Transaction.create(req.body);
-        emitEvent("transaction:new", transaction);
+        const history = await Transaction.find({
+            accountId: req.body.accountId
+        }).sort({ timestamp: 1 });
 
-        if (transaction.riskLevel === "MEDIUM" || transaction.riskLevel === "HIGH") {
-    emitEvent("alert:new", transaction);
-}
+        const detectedTransaction =
+            await processTransaction(
+                req.body,
+                history
+            );
+
+        const transaction =
+            await Transaction.create(
+                detectedTransaction
+            );
+
+        emitEvent(
+            "transaction:new",
+            transaction
+        );
+
+        if (
+            transaction.riskLevel === "MEDIUM" ||
+            transaction.riskLevel === "HIGH"
+        ) {
+            emitEvent(
+                "alert:new",
+                transaction
+            );
+        }
 
         res.status(201).json({
-            message: "Transaction stored successfully",
+            message:
+                "Transaction processed and stored successfully",
             transaction
         });
     } catch (error) {
         res.status(400).json({
-            message: "Failed to store transaction",
+            message:
+                "Failed to process transaction",
             error: error.message
         });
     }
@@ -27,14 +56,17 @@ router.post("/", async (req, res) => {
 
 router.get("/", async (req, res) => {
     try {
-        const transactions = await Transaction.find().sort({ createdAt: -1 });
+        const transactions =
+            await Transaction.find()
+                .sort({ createdAt: -1 });
 
         res.json({
             transactions
         });
     } catch (error) {
         res.status(500).json({
-            message: "Failed to fetch transactions",
+            message:
+                "Failed to fetch transactions",
             error: error.message
         });
     }
@@ -42,13 +74,16 @@ router.get("/", async (req, res) => {
 
 router.get("/:transactionId", async (req, res) => {
     try {
-        const transaction = await Transaction.findOne({
-            transactionId: req.params.transactionId
-        });
+        const transaction =
+            await Transaction.findOne({
+                transactionId:
+                    req.params.transactionId
+            });
 
         if (!transaction) {
             return res.status(404).json({
-                message: "Transaction not found"
+                message:
+                    "Transaction not found"
             });
         }
 
@@ -57,7 +92,8 @@ router.get("/:transactionId", async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({
-            message: "Failed to fetch transaction",
+            message:
+                "Failed to fetch transaction",
             error: error.message
         });
     }
