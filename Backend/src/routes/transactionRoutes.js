@@ -1,11 +1,17 @@
 const express = require("express");
 const Transaction = require("../models/Transaction");
+const { emitEvent } = require("../socket/socket");
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
         const transaction = await Transaction.create(req.body);
+        emitEvent("transaction:new", transaction);
+
+        if (transaction.riskLevel === "MEDIUM" || transaction.riskLevel === "HIGH") {
+    emitEvent("alert:new", transaction);
+}
 
         res.status(201).json({
             message: "Transaction stored successfully",

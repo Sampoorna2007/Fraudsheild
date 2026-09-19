@@ -1,11 +1,13 @@
 const express = require("express");
 const Campaign = require("../models/Campaign");
+const { emitEvent } = require("../socket/socket");
 
 const router = express.Router();
 
 router.post("/", async (req, res) => {
     try {
         const campaign = await Campaign.create(req.body);
+        emitEvent("campaign:new", campaign);
 
         res.status(201).json({
             message: "Campaign stored successfully",
@@ -78,6 +80,7 @@ router.patch("/:campaignId/status", async (req, res) => {
                 message: "Campaign not found"
             });
         }
+        emitEvent("campaign:updated", campaign);
 
         res.json({
             message: "Campaign status updated successfully",
